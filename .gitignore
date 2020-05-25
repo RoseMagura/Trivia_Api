@@ -1,6 +1,8 @@
 .vscode
 __pycache__
 env
+yarn.lock
+node_modules
 
 # OS generated files #
 ######################

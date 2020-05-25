@@ -8,6 +8,15 @@ from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
+def paginate_questions(request, selection):
+    page = request.args.get('page', 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+
+    questions = [question.format() for question in selection]
+    current_questions = questions[start: end]
+    return current_questions
+
 def create_app(test_config=None):
 # create and configure the app
     app = Flask(__name__)
@@ -22,40 +31,59 @@ def create_app(test_config=None):
       'GET, POST, DELETE')
       return response
 
-        # '''
-        # @TODO:
-        # Create an endpoint to handle GET requests
-        # for all available categories.
-        # '''
-    @app.route('/')
-    def index():
-        categories = Category.query.all()
-        print(categories)
-        return 'hello world'
+    @app.route('/categories')
+    def get_categories():
+        selection = Category.query.order_by(Category.id).all()
+        categories = [category.format() for category in selection]
+
+        if len(categories) == 0:
+            abort(404)
+
+        return jsonify({
+            'success': True,
+            'categories': categories,
+            'total_categories': len(Category.query.all())
+        })
+
+    @app.route('/questions', methods=['GET', 'POST', 'DELETE'])
+    def get_paginated_questions():
+        cat_selection = Category.query.order_by(Category.id).all()
+        categories = [category.format() for category in cat_selection]
+
+        selection = Question.query.order_by(Question.id).all()
+        current_questions = paginate_questions(request, selection)
+
+        if (len(current_questions) == 0):
+            abort(404)
+
+        return jsonify({
+            'success': True,
+            'questions': current_questions,
+            'total_questions': len(Question.query.all()),
+            'current_category': None,
+            'categories': categories
+        })
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            'success': False,
+            'error': 404,
+            'message': 'resource not found'
+        }), 404
+
+      # '''
+      # @TODO:
+      # Create an endpoint to DELETE question using a question ID.
+      #
+      # TEST: When you click the trash icon next to a question, the question will be removed.
+      # This removal will persist in the database and when you refresh the page.
+      # '''
+          
+
     return app
 
 
-
-  # '''
-  # @TODO:
-  # Create an endpoint to handle GET requests for questions,
-  # including pagination (every 10 questions).
-  # This endpoint should return a list of questions,
-  # number of total questions, current category, categories.
-  #
-  # TEST: At this point, when you start the application
-  # you should see questions and categories generated,
-  # ten questions per page and pagination at the bottom of the screen for three pages.
-  # Clicking on the page numbers should update the questions.
-  # '''
-
-  # '''
-  # @TODO:
-  # Create an endpoint to DELETE question using a question ID.
-  #
-  # TEST: When you click the trash icon next to a question, the question will be removed.
-  # This removal will persist in the database and when you refresh the page.
-  # '''
   #
   # '''
   # @TODO:
