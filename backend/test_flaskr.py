@@ -19,6 +19,19 @@ class TriviaTestCase(unittest.TestCase):
         self.database_path = "postgres://{}@{}/{}".format(database_username,'localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
+        self.new_question = {
+                'question': 'What movie earned Tom Hanks his third straight Oscar nomination, in 1996?',
+                'answer': 'Apollo 13',
+                'difficulty': 4,
+                'category': 5
+        }
+
+        self.bad_question = {
+                'question': 'What is this question?',
+                'answer': 'weird',
+                'difficulty': 10,
+                'category': 10
+        }
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
@@ -72,13 +85,32 @@ class TriviaTestCase(unittest.TestCase):
     #     self.assertTrue(len(data['questions']))
     #     self.assertEqual(question, None)
     #
-    def test_404_if_book_does_not_exist(self):
-        res = self.client().delete('/questions/1000')
+    # def test_404_if_question_does_not_exist(self):
+    #     res = self.client().delete('/questions/1000')
+    #     data = json.loads(res.data)
+    #
+    #     self.assertEqual(res.status_code, 422)
+    #     self.assertEqual(data['success'], False)
+    #     self.assertEqual(data['message'], 'unprocessable')
+
+    def test_create_new_question(self):
+        res = self.client().post('/add', json=self.new_question)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['created'])
+        self.assertTrue(data['questions'])
+        self.assertTrue(data['total_questions'])
+
+    def test_422_if_question_creation_fails(self):
+        res = self.client().post('/add', json=self.bad_question)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'unprocessable')
+
 # Make the tests conveniently executable
 if __name__ == "__main__":
     unittest.main()

@@ -19,9 +19,11 @@ def paginate_questions(request, selection):
 
 def get_category_list():
     categories = {}
+    category_types = []
     for category in Category.query.all():
         categories[category.id] = category.type
-    return categories
+        category_types.append(category.type)
+    return categories, category_types
 
 def create_app(test_config=None):
 # create and configure the app
@@ -35,27 +37,31 @@ def create_app(test_config=None):
       'Content-Type, Authorization')
       response.headers.add('Access-Control-Allow-Methods',
       'GET, POST, DELETE')
+      response.headers.add('Access-Control-Allow-Credentials', 'true')
       return response
 
+    @app.route('/')
     @app.route('/categories')
-    def get_categories():
-        categories = get_category_list
+    def get_categories(jsonResponse=True):
+        categories, category_types = get_category_list()
 
         if len(categories) == 0:
             abort(404)
 
-        return jsonify({
-            'success': True,
-            'categories': categories,
-            'total_categories': len(categories)
-        })
+        if jsonResponse:
+            return jsonify({
+                'success': True,
+                'categories': categories,
+                'total_categories': len(categories)
+            })
+        else:
+            return category_types
 
-    @app.route('/questions', methods=['GET', 'POST'])
+    @app.route('/questions', methods=['GET'])
     def get_paginated_questions():
-        # cat_selection = Category.query.order_by(Category.id).all()
-        # categories = [category.format() for category in cat_selection]
         selection = Question.query.order_by(Question.id).all()
         current_questions = paginate_questions(request, selection)
+        categories = get_category_list()
 
         if (len(current_questions) == 0):
             abort(404)
@@ -64,8 +70,35 @@ def create_app(test_config=None):
             'success': True,
             'questions': current_questions,
             'total_questions': len(Question.query.all()),
-            'categories': get_category_list()
+            'categories': categories[0]
         })
+
+    @app.route('/add', methods=['POST'])
+    def create_question():
+        body = request.get_json()
+
+        new_question = body.get('question', None)
+        new_answer = body.get('answer', None)
+        new_difficulty = body.get('difficulty', None)
+        new_category = body.get('category', None)
+
+        try:
+            entry = Question(question=new_question, answer=new_answer,
+                    difficulty=new_difficulty, category=new_category)
+            entry.insert()
+
+            selection = Question.query.order_by(Question.id).all()
+            current_questions = paginate_questions(request, selection)
+
+            return jsonify({
+                'success': True,
+                'created': entry.id,
+                'questions': current_questions,
+                'total_questions': len(selection)
+            })
+
+        except:
+            abort(422)
 
     @app.route('/questions/<int:question_id>', methods=['DELETE'])
     def delete_book(question_id):
@@ -103,29 +136,12 @@ def create_app(test_config=None):
             'message': 'unprocessable'
         }), 422
 
-      # '''
-      # @TODO:
-      # Create an endpoint to DELETE question using a question ID.
-      #
-      # TEST: When you click the trash icon next to a question, the question will be removed.
-      # This removal will persist in the database and when you refresh the page.
-      # '''
 
 
     return app
 
 
-  #
-  # '''
-  # @TODO:
-  # Create an endpoint to POST a new question,
-  # which will require the question and answer text,
-  # category, and difficulty score.
-  #
-  # TEST: When you submit a question on the "Add" tab,
-  # the form will clear and the question will appear at the end of the last page
-  # of the questions list in the "List" tab.
-  # '''
+
   #
   # '''
   # @TODO:
