@@ -93,23 +93,39 @@ class TriviaTestCase(unittest.TestCase):
     #     self.assertEqual(data['success'], False)
     #     self.assertEqual(data['message'], 'unprocessable')
 
-    def test_create_new_question(self):
-        res = self.client().post('/add', json=self.new_question)
+    # def test_create_new_question(self):
+    #     res = self.client().post('/add', json=self.new_question)
+    #     data = json.loads(res.data)
+    #
+    #     self.assertEqual(res.status_code, 200)
+    #     self.assertEqual(data['success'], True)
+    #     self.assertTrue(data['created'])
+    #     self.assertTrue(data['questions'])
+    #     self.assertTrue(data['total_questions'])
+    #
+    # def test_422_if_question_creation_fails(self):
+    #     res = self.client().post('/add', json=self.bad_question)
+    #     data = json.loads(res.data)
+    #
+    #     self.assertEqual(res.status_code, 422)
+    #     self.assertEqual(data['success'], False)
+    #     self.assertEqual(data['message'], 'unprocessable')
+
+    def test_get_question_search_with_results(self):
+            res = self.client().post('/questions', json={'searchTerm': 'Caged'})
+            data = json.loads(res.data)
+
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(data['success'], True)
+            self.assertEqual(data['total_questions'], 1)
+
+    def test_get_question_search_without_results(self):
+        res = self.client().post('/questions', json={'searchTerm': 'gomi'})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertTrue(data['created'])
-        self.assertTrue(data['questions'])
-        self.assertTrue(data['total_questions'])
-
-    def test_422_if_question_creation_fails(self):
-        res = self.client().post('/add', json=self.bad_question)
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'unprocessable')
+        self.assertEqual(data['total_questions'], 0)
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

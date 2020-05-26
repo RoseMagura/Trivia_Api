@@ -73,6 +73,31 @@ def create_app(test_config=None):
             'categories': categories[0]
         })
 
+    @app.route('/questions', methods=['POST'])
+    def search_questions():
+        body = request.get_json()
+        search = body.get('searchTerm')
+
+        try:
+            results = Question.query.filter(Question.question.ilike('%{}%'.format(search)))
+            display = paginate_questions(request, results)
+
+            if len(results.all()) > 0:
+                return jsonify({
+                    'success': True,
+                    'questions': display,
+                    'total_questions': len(results.all())
+                })
+            else:
+                display = [{'question': 'No results found. Please search again'}]
+                return jsonify({
+                    'success': False,
+                    'questions': display,
+                    'total_questions': len(results.all())
+                })
+        except:
+            abort(422)
+
     @app.route('/add', methods=['POST'])
     def create_question():
         body = request.get_json()
@@ -121,6 +146,14 @@ def create_app(test_config=None):
         except:
             abort(422)
 
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            'success': False,
+            'error': 400,
+            'message': 'bad request'
+        }), 400
+
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
@@ -138,21 +171,12 @@ def create_app(test_config=None):
 
 
 
+
     return app
 
 
 
-  #
-  # '''
-  # @TODO:
-  # Create a POST endpoint to get questions based on a search term.
-  # It should return any questions for whom the search term
-  # is a substring of the question.
-  #
-  # TEST: Search by any phrase. The questions list will update to include
-  # only question that include that string within their question.
-  # Try using the word "title" to start.
-  # '''
+
   #
   # '''
   # @TODO:
