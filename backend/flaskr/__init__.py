@@ -17,11 +17,17 @@ def paginate_questions(request, selection):
     current_questions = questions[start: end]
     return current_questions
 
+def get_category_list():
+    categories = {}
+    for category in Category.query.all():
+        categories[category.id] = category.type
+    return categories
+
 def create_app(test_config=None):
 # create and configure the app
     app = Flask(__name__)
     setup_db(app)
-    cors = CORS(app, resources={r'/api/*': {'origins': '*'}})
+    cors = CORS(app, resources={r'/*': {'origins': '*'}})
 
     @app.after_request
     def after_request(response):
@@ -33,8 +39,7 @@ def create_app(test_config=None):
 
     @app.route('/categories')
     def get_categories():
-        selection = Category.query.order_by(Category.id).all()
-        categories = [category.format() for category in selection]
+        categories = get_category_list
 
         if len(categories) == 0:
             abort(404)
@@ -42,14 +47,13 @@ def create_app(test_config=None):
         return jsonify({
             'success': True,
             'categories': categories,
-            'total_categories': len(Category.query.all())
+            'total_categories': len(categories)
         })
 
-    @app.route('/questions', methods=['GET', 'POST', 'DELETE'])
+    @app.route('/questions', methods=['GET', 'POST'])
     def get_paginated_questions():
-        cat_selection = Category.query.order_by(Category.id).all()
-        categories = [category.format() for category in cat_selection]
-
+        # cat_selection = Category.query.order_by(Category.id).all()
+        # categories = [category.format() for category in cat_selection]
         selection = Question.query.order_by(Question.id).all()
         current_questions = paginate_questions(request, selection)
 
@@ -60,9 +64,29 @@ def create_app(test_config=None):
             'success': True,
             'questions': current_questions,
             'total_questions': len(Question.query.all()),
-            'current_category': None,
-            'categories': categories
+            'categories': get_category_list()
         })
+
+    @app.route('/questions/<int:question_id>', methods=['DELETE'])
+    def delete_book(question_id):
+        try:
+            question = Question.query.filter(Question.id == question_id).one_or_none()
+
+            if question is None:
+                abort(404)
+
+            question.delete()
+            selection = Question.query.order_by(Question.id).all()
+            current_questions = paginate_questions(request, selection)
+
+            return jsonify({
+                'success': True,
+                'deleted': question_id,
+                'questions': current_questions,
+                'total_questions': len(selection)
+            })
+        except:
+            abort(422)
 
     @app.errorhandler(404)
     def not_found(error):
@@ -72,6 +96,13 @@ def create_app(test_config=None):
             'message': 'resource not found'
         }), 404
 
+    @app.errorhandler(422)
+    def not_found(error):
+        return jsonify({
+            'success': False,
+            'message': 'unprocessable'
+        }), 422
+
       # '''
       # @TODO:
       # Create an endpoint to DELETE question using a question ID.
@@ -79,7 +110,7 @@ def create_app(test_config=None):
       # TEST: When you click the trash icon next to a question, the question will be removed.
       # This removal will persist in the database and when you refresh the page.
       # '''
-          
+
 
     return app
 
