@@ -123,7 +123,7 @@ def create_app(test_config=None):
             print(ex)
             abort(422)
 
-    @app.route('/quizzes', methods=['POST', 'GET'])
+    @app.route('/quizzes', methods=['POST'])
     def play_quiz():
         body = request.get_json()
         category = body.get('quiz_category', None)
