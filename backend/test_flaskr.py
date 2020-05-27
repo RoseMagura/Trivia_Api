@@ -8,19 +8,22 @@ from models import setup_db, Question, Category
 
 
 class TriviaTestCase(unittest.TestCase):
-    """This class represents the trivia test case"""
+    '''This class represents the trivia test case'''
 
     def setUp(self):
-        """Define test variables and initialize app."""
+        '''Define test variables and initialize app.'''
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "trivia_test"
+        self.database_name = 'trivia_test'
         database_username = 'postgres'
-        self.database_path = "postgres://{}@{}/{}".format(database_username,'localhost:5432', self.database_name)
+        self.database_path = 'postgres://{}@{}/{}'.format(
+            database_username, 'localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
         self.new_question = {
-                'question': 'What movie earned Tom Hanks his third straight Oscar nomination, in 1996?',
+                'question':
+                'What movie earned Tom Hanks his third straight Oscar'
+                + 'nomination, in 1996?',
                 'answer': 'Apollo 13',
                 'difficulty': 4,
                 'category': 5
@@ -40,13 +43,9 @@ class TriviaTestCase(unittest.TestCase):
             self.db.create_all()
 
     def tearDown(self):
-        """Executed after reach test"""
+        '''Executed after reach test'''
         pass
 
-    """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
-    """
     def test_show_categories(self):
         res = self.client().get('/categories')
         data = json.loads(res.data)
@@ -128,12 +127,12 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'unprocessable')
 
     def test_get_question_search_with_results(self):
-            res = self.client().post('/questions', json={'searchTerm': 'Caged'})
-            data = json.loads(res.data)
+        res = self.client().post('/questions', json={'searchTerm': 'Caged'})
+        data = json.loads(res.data)
 
-            self.assertEqual(res.status_code, 200)
-            self.assertEqual(data['success'], True)
-            self.assertEqual(data['total_questions'], 1)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['total_questions'], 1)
 
     def test_get_question_search_without_results(self):
         res = self.client().post('/questions', json={'searchTerm': 'gomi'})
@@ -143,7 +142,29 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['total_questions'], 0)
 
+    def test_play_quiz(self):
+        res = self.client().post(
+            '/quizzes',
+            json={
+                'previous_questions': [],
+                'quiz_category': {'type': 'Entertainment', 'id': '5'}})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['question'])
+
+    def test_send_message_when_no_questions_left(self):
+        res = self.client().post(
+            '/quizzes',
+            json={
+                'previous_questions': [20, 21, 22],
+                'quiz_category': {'type': 'Science', 'id': '1'}})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['question'], {'question': 'No questions left'})
+
 
 # Make the tests conveniently executable
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
