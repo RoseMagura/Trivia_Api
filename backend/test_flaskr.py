@@ -29,12 +29,12 @@ class TriviaTestCase(unittest.TestCase):
                 'category': 5
         }
 
-        self.bad_question = {
-                'question': 'What is this question?',
-                'answer': 'weird',
-                'difficulty': 10,
-                'category': 10
-        }
+        # self.bad_question = {
+        #         'question': 'What is this question?',
+        #         'answer': 'weird',
+        #         'difficulty': 10,
+        #         'category': 10
+        # }
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
@@ -118,13 +118,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['questions'])
         self.assertTrue(data['total_questions'])
 
-    def test_422_if_question_creation_fails(self):
-        res = self.client().post('/add', json=self.bad_question)
+    def test_422_if_question_creation_not_allowed(self):
+        res = self.client().post('/questions/1', json=self.new_question)
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 422)
+        self.assertEqual(res.status_code, 405)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'unprocessable')
+        self.assertEqual(data['message'], 'method not allowed')
 
     def test_get_question_search_with_results(self):
         res = self.client().post('/questions', json={'searchTerm': 'Caged'})

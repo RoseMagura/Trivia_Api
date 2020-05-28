@@ -25,6 +25,7 @@ If an error occurs, it will be returned as a JSON object in this format:
 There are three error types:
   -400: Bad Request
   -404: Resource Not Found
+  -405: Method Not Allowed
   -422: Not Processable
 
 ##Endpoints
