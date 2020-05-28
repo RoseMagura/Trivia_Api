@@ -147,9 +147,9 @@ def create_app(test_config=None):
 
             return jsonify({'question': post[0][0]})
         else:
-            return jsonify({"question": {"question": "No questions left"}})
+            return jsonify({"question": None})
 
-    @app.route('/add', methods=['POST'])
+    @app.route('/questions/new', methods=['POST'])
     def create_question():
         body = request.get_json()
 

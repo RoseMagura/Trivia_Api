@@ -29,12 +29,6 @@ class TriviaTestCase(unittest.TestCase):
                 'category': 5
         }
 
-        # self.bad_question = {
-        #         'question': 'What is this question?',
-        #         'answer': 'weird',
-        #         'difficulty': 10,
-        #         'category': 10
-        # }
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
@@ -109,7 +103,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'unprocessable')
 
     def test_create_new_question(self):
-        res = self.client().post('/add', json=self.new_question)
+        res = self.client().post('/questions/new', json=self.new_question)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -162,7 +156,7 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['question'], {'question': 'No questions left'})
+        self.assertEqual(data['question'], None)
 
 
 # Make the tests conveniently executable
