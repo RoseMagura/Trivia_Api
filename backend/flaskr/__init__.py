@@ -129,16 +129,15 @@ def create_app(test_config=None):
         category = body.get('quiz_category', None)
         previous_questions = body.get('previous_questions', None)
         if category['id'] == 0:
-            questions = Question.query.all()
+            questions = Question.query.filter(
+                Question.id.notin_(previous_questions))
         else:
-            questions = Question.query.filter(Question.category ==
-                                              category['id']).all()
+            questions = Question.query.filter(
+                Question.id.notin_(previous_questions),
+                Question.category == category['id']).all()
         post = []
         ids = [question.id for question in questions]
-        if len(previous_questions) > 0:
-                for x in range(len(previous_questions)):
-                    if previous_questions[x] in ids:
-                        ids.remove(previous_questions[x])
+
         if len(ids) > 0:
             randomNo = random.choice(ids)
             pick = Question.query.filter(Question.id == randomNo)
@@ -146,7 +145,7 @@ def create_app(test_config=None):
             format = [question.format() for question in pick]
             post.append(format)
 
-            return jsonify({'question': post[0][0], 'ids': ids})
+            return jsonify({'question': post[0][0]})
         else:
             return jsonify({"question": {"question": "No questions left"}})
 
@@ -182,7 +181,7 @@ def create_app(test_config=None):
     def delete_book(question_id):
         try:
             question = Question.query.filter(Question.id == question_id).\
-            one_or_none()
+                one_or_none()
 
             if question is None:
                 abort(404)
