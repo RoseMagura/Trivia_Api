@@ -136,8 +136,9 @@ def create_app(test_config=None):
         post = []
         ids = [question.id for question in questions]
         if len(previous_questions) > 0:
-            for x in range(len(previous_questions)):
-                ids.remove(previous_questions[x])
+                for x in range(len(previous_questions)):
+                    if previous_questions[x] in ids:
+                        ids.remove(previous_questions[x])
         if len(ids) > 0:
             randomNo = random.choice(ids)
             pick = Question.query.filter(Question.id == randomNo)
@@ -145,7 +146,7 @@ def create_app(test_config=None):
             format = [question.format() for question in pick]
             post.append(format)
 
-            return jsonify({'question': post[0][0]})
+            return jsonify({'question': post[0][0], 'ids': ids})
         else:
             return jsonify({"question": {"question": "No questions left"}})
 
